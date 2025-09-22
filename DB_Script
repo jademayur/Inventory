@@ -1,0 +1,85 @@
+USE [InventoryDB]
+GO
+
+/****** Object:  Table [dbo].[ProductGroup]    Script Date: 22-09-2025 16:55:32 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[ProductGroup](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[GroupName] [nvarchar](50) NULL,
+ CONSTRAINT [PK_ProductGroup] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+
+
+CREATE PROCEDURE [dbo].[CreateProductGroup]
+    @GroupName NVARCHAR(100),
+	@Result INT OUTPUT  -- 0=Success, 1=Duplicate, 2=Not Found
+    
+AS
+BEGIN
+
+	SET NOCOUNT ON;
+
+    -- Check duplicate
+    IF EXISTS (SELECT 1 FROM ProductGroup WHERE GroupName = @GroupName)
+    BEGIN
+        SET @Result = 1;   -- Duplicate found
+        RETURN;
+    END
+	
+    INSERT INTO ProductGroup (GroupName) Values (@GroupName);
+    RETURN 0; -- Success
+END
+
+CREATE PROCEDURE [dbo].[UpdateProductGroup]
+    @Id INT,
+    @GroupName NVARCHAR(100),
+	@Result INT OUTPUT  -- 0=Success, 1=Duplicate, 2=Not Found
+   
+AS
+BEGIN
+   
+    IF NOT EXISTS (SELECT 1 FROM ProductGroup WHERE Id = @Id)
+    BEGIN
+        SET @Result = 2;   -- Not found
+        RETURN;
+    END
+
+	IF EXISTS (SELECT 1 FROM ProductGroup WHERE GroupName = @GroupName AND Id <> @Id)
+    BEGIN
+        SET @Result = 1;   -- Duplicate
+        RETURN;
+    END
+
+    UPDATE ProductGroup SET GroupName= @GroupName WHERE Id=@Id;
+	SET @Result = 0;   -- Success
+    RETURN ; 
+END
+
+CREATE   PROCEDURE [dbo].[DeleteProductGroup] @Id INT
+AS
+BEGIN
+    DELETE FROM ProductGroup WHERE Id=@Id
+END
+
+CREATE  PROCEDURE [dbo].[GetAllProductGroups]
+AS
+BEGIN
+    SELECT Id, GroupName FROM ProductGroup
+END
+
+CREATE PROCEDURE [dbo].[GetProductGroupById]
+    @Id INT
+AS
+BEGIN
+    SELECT Id, GroupName FROM ProductGroup WHERE Id = @Id;
+END
+
